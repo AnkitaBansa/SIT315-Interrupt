@@ -1,0 +1,85 @@
+int motionSens = 7;
+const int soilMoist = A0;
+const int ledPin = 3;  // Assuming the LED is connected to pin 3
+const int buttonPin = 7;  // Change this to the pin where your push button is connected
+
+bool buttonState = LOW;
+bool lastButtonState = LOW;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(motionSens, INPUT);
+  pinMode(soilMoist, INPUT);
+  pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP);  // Internal pull-up resistor for the button
+}
+
+void loop() {
+  // Read the state of the motion sensor
+  int motionSensorValue = digitalRead(motionSens);
+
+  // Check if motion is detected
+  if (motionSensorValue == HIGH) {
+    motionInterrupt();
+  } else {
+    noMotionInterrupt();
+  }
+
+  // Read the soil moisture sensor
+  int soilMoistValue = analogRead(soilMoist);
+
+  // Check soil moisture level
+  if (soilMoistValue > 500) { // You may need to adjust this threshold based on your sensor
+    soilMoistInterrupt();
+  }
+
+  // Read the state of the button
+  int reading = digitalRead(buttonPin);
+
+  // Check if the button state has changed
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  // Check if a stable state has been reached
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      // Perform any action when the button is pressed
+      if (buttonState == HIGH) {
+        buttonInterrupt();
+      }
+    }
+  }
+
+  // Your main loop code can be added here
+
+  delay(1000); // Adjust the delay based on your specific requirements
+}
+
+void motionInterrupt() {
+  // Toggle LED state or perform any action when motion is detected
+  digitalWrite(ledPin, HIGH);  // Turn on the LED
+  Serial.println("Motion Detected!");
+}
+
+void noMotionInterrupt() {
+  // Perform any action when no motion is detected
+  digitalWrite(ledPin, LOW);  // Turn off the LED
+  Serial.println("No Motion Detected!");
+}
+
+void soilMoistInterrupt() {
+  // Perform any action based on soil moisture level
+  digitalWrite(ledPin, LOW);  // Turn off the LED
+  Serial.print("Soil Moisture Detected - Value: ");
+  Serial.println(analogRead(soilMoist));
+}
+
+void buttonInterrupt() {
+  // Perform any action when the button is pressed
+  Serial.println("Button Pressed!");
+}
